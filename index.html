@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>學霸養成計畫 - V7.2 雲端保底版</title>
+    <style>
+        /* --- V7.2 樣式設定 --- */
+        :root {
+            --brand-dark: #00509B;
+            --brand-green: #78C878;
+            --brand-light: #82AFE1;
+            --bg-color: #f4f7fa;
+            --screen-bg: #cddfa0;
+            --screen-border: #a3b37d;
+            --line-color: #06C755;
+        }
+
+        body {
+            font-family: '微軟正黑體', monospace;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 10px;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            touch-action: manipulation;
+            position: relative; 
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #splash-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--brand-dark), #003d7a);
+            z-index: 10000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; color: white;
+            text-align: center; padding: 20px; box-sizing: border-box; transition: opacity 0.5s;
+        }
+        
+        .splash-logo-img { width: 150px; height: auto; margin-bottom: 20px; animation: float 3s infinite ease-in-out; }
+        .splash-slogan { font-size: 1.5em; font-weight: bold; line-height: 1.6; margin-bottom: 40px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .splash-btn {
+            padding: 15px 40px; background-color: var(--brand-green); color: white;
+            border: none; border-radius: 30px; font-size: 1.2em; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: transform 0.1s;
+        }
+        .splash-btn:active { transform: scale(0.95); }
+        .loading-text { font-size: 0.9em; margin-top: 10px; color: #82AFE1; }
+
+        #death-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.9); z-index: 9000;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            color: white; text-align: center;
+        }
+        .tombstone { font-size: 80px; margin-bottom: 20px; filter: grayscale(100%); }
+        .death-text { font-size: 1.2em; margin-bottom: 30px; line-height: 1.5; color: #ccc; }
+        .pray-btn {
+            padding: 12px 30px; background-color: #555; color: #fff; border: 2px solid #777;
+            border-radius: 10px; font-size: 1.1em; cursor: pointer; margin-top: 10px;
+        }
+        #incense-anim { display: none; font-size: 60px; margin-bottom: 20px; animation: smoke 2s infinite; }
+        @keyframes smoke { 0% { opacity: 0.5; transform: translateY(0); filter: blur(0px); } 50% { opacity: 1; transform: translateY(-10px); filter: blur(2px); } 100% { opacity: 0.5; transform: translateY(0); filter: blur(0px); } }
+
+        .container {
+            width: 100%; max-width: 400px; background-color: #ffffff;
+            border-radius: 20px; box-shadow: 0 10px 25px rgba(0, 50, 100, 0.2);
+            overflow: hidden; display: flex; flex-direction: column;
+            border: 2px solid #fff; z-index: 1;
+        }
+
+        .header {
+            width: 100%; background: linear-gradient(90deg, var(--brand-dark), #003d7a);
+            color: white; padding: 12px 15px; box-sizing: border-box;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 1em; font-weight: bold; white-space: nowrap;
+        }
+
+        .main-screen { padding: 15px; display: flex; flex-direction: column; align-items: center; }
+
+        .pet-device-border {
+            background-color: #f0f0f0; border: 4px solid #dce0e6;
+            border-radius: 30px; padding: 10px; margin-bottom: 10px; position: relative;
+            box-shadow: inset 0 -3px 5px rgba(0,0,0,0.05);
+        }
+
+        .pet-screen-container {
+            width: 140px; height: 140px; background-color: var(--screen-bg);
+            border: 3px inset var(--screen-border); border-radius: 6px;
+            display: flex; justify-content: center; align-items: center; position: relative;
+            background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+            background-size: 4px 4px; overflow: hidden;
+        }
+
+        .pet-image {
+            width: 70%; height: 70%; object-fit: contain; image-rendering: pixelated;
+            z-index: 1; animation: walk-around 8s linear infinite;
+        }
+
+        @keyframes walk-around {
+            0% { transform: translateX(-25px) scaleX(1); }
+            45% { transform: translateX(25px) scaleX(1); }
+            50% { transform: translateX(25px) scaleX(-1); }
+            95% { transform: translateX(-25px) scaleX(-1); }
+            100% { transform: translateX(-25px) scaleX(1); }
+        }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        .eating-effect-fullscreen {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            font-size: 80px; z-index: 9999; opacity: 0; pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-shadow: 0 0 10px rgba(255,255,255,0.8);
+        }
+        .is-eating-fullscreen { opacity: 1; transform: translate(-50%, -50%) scale(1); animation: wiggle-big 0.25s infinite alternate; }
+
+        .coin-popup {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 40px; color: gold; font-weight: bold; z-index: 9999;
+            pointer-events: none; opacity: 0; text-shadow: 2px 2px 0 #000;
+        }
+        .animate-coin { animation: float-up 1s ease-out forwards; }
+        @keyframes float-up {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+            50% { transform: translate(-50%, -150%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -200%) scale(1); }
+        }
+
+        .skull-popup {
+            position: absolute; top: 10px; right: 10px; font-size: 40px; z-index: 5; opacity: 0; pointer-events: none;
+        }
+        .screen-shake { animation: shake-hard 0.5s; filter: hue-rotate(240deg) grayscale(50%) brightness(0.8); }
+        .show-skull { opacity: 1; animation: pop-skull 0.5s; }
+        @keyframes shake-hard { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(-5px, 5px); } 50% { transform: translate(5px, -5px); } 75% { transform: translate(-5px, -5px); } }
+        @keyframes pop-skull { 0% { transform: scale(0); } 50% { transform: scale(1.5); } 100% { transform: scale(1); } }
+        @keyframes wiggle-big { from { margin-top: -8px; transform: translate(-50%, -50%) rotate(-10deg); } to { margin-top: 8px; transform: translate(-50%, -50%) rotate(10deg); } }
+
+        .pet-name { font-size: 1.2em; font-weight: bold; color: var(--brand-dark); margin: 5px 0 0 0; }
+        .pet-stage { color: var(--brand-light); font-size: 0.8em; margin-bottom: 10px; }
+        
+        .dialogue-box {
+            background: #fff; padding: 8px 12px; border: 2px solid var(--brand-dark); border-radius: 10px;
+            font-size: 0.9em; color: var(--brand-dark); margin-bottom: 10px; min-height: 40px;
+            display: flex; align-items: center; justify-content: center; text-align: center;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+        }
+
+        .status-area { width: 100%; margin-bottom: 15px; }
+        .bar-row { display: flex; align-items: center; margin-bottom: 5px; font-size: 0.8em; font-weight: bold; color: #555;}
+        .bar-label { width: 60px; }
+        .progress-track { flex-grow: 1; height: 10px; background: #eee; border-radius: 5px; overflow: hidden; border: 1px solid #ddd;}
+        .progress-fill { height: 100%; width: 0%; transition: width 0.3s; }
+        .exp-fill { background: var(--brand-light); }
+        .hunger-fill { background: var(--brand-green); }
+
+        .action-buttons { display: flex; gap: 10px; width: 100%; }
+        .btn {
+            flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 1em; font-weight: bold; color: white;
+            cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.2); transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .btn:active { transform: translateY(4px); box-shadow: 0 0 0; }
+        .btn-quiz { background-color: var(--brand-dark); }
+        .btn-shop { background-color: var(--brand-green); }
+
+        .share-area { margin-top: 10px; width: 100%; }
+        .btn-share {
+            width: 100%; padding: 10px; background-color: #06C755; color: white; border: none; border-radius: 10px;
+            font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;
+            box-shadow: 0 4px 0 #05a546;
+        }
+        .btn-share:active { transform: translateY(4px); box-shadow: 0 0 0; }
+
+        .select-screen { padding: 20px; text-align: center; }
+        .pet-option { border: 2px solid #eee; padding: 10px; margin: 10px 0; border-radius: 10px; cursor: pointer; display: flex; align-items: center; }
+        .pet-option:hover { border-color: var(--brand-dark); background: #f9f9f9; }
+        .pet-option img { width: 50px; height: 50px; margin-right: 15px; background: var(--screen-bg); padding: 5px; border-radius: 5px;}
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100;}
+        .modal-content { background: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 350px; position: relative; max-height: 80vh; overflow-y: auto; }
+        
+        .option { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; background: white; border-radius: 8px; cursor: pointer; text-align: left; font-size: 1em;}
+        .option:hover { background: #eee; }
+        .correct { background: #d4edda !important; border-color: #28a745 !important;}
+        .wrong { background: #f8d7da !important; border-color: #dc3545 !important;}
+        .shop-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee; align-items: center;}
+        .shop-item-icon { font-size: 1.5em; margin-right: 10px; }
+        
+    </style>
+</head>
+<body>
+
+<div id="splash-screen">
+    <img src="./images/logo.png" class="splash-logo-img" alt="obear logo" onerror="this.style.display='none'; this.nextElementSibling.innerText='🐻';"> 
+    <div class="splash-slogan">
+        把時間留給家人<br>
+        將學業交給 obear
+    </div>
+    <button class="splash-btn" onclick="enterGame()">進入遊戲</button>
+    <div id="loading-msg" class="loading-text"></div>
+</div>
+
+<div id="death-screen">
+    <div id="incense-anim">🕯️ 🙏 🕯️</div>
+    <div class="tombstone">🪦</div>
+    <div class="death-text">你的學霸熊因為太久沒吃飯<br>已經去當小天使了...<br><span style="font-size:0.8em; color:#aaa;">(超過48小時未登入)</span></div>
+    <button class="pray-btn" onclick="startReviveChallenge()">上香祈福 🙏 (挑戰復活)</button>
+    <div style="margin-top:10px; font-size:0.9em; color:#ff6b6b;">⚠️ 需連續答對 10 題才能復活<br>剩餘機會：<span id="revive-chances">3</span> 次</div>
+</div>
+
+<div id="eating-effect-fullscreen" class="eating-effect-fullscreen"></div>
+<div id="coin-effect" class="coin-popup">💰 +10</div>
+
+<div class="container">
+    <div id="select-screen" class="select-screen">
+        <h2 style="color:var(--brand-dark)">選擇備考夥伴</h2>
+        <div class="pet-option" onclick="selectPet('steady')">
+            <img src="https://api.dicebear.com/9.x/pixel-art/svg?seed=brownbear1" alt="熊">
+            <div><b>學測滿分熊</b><br><small>穩紮穩打</small></div>
+        </div>
+        <div class="pet-option" onclick="selectPet('goal')">
+            <img src="./images/polar_1.png" onerror="this.src='https://api.dicebear.com/9.x/pixel-art/svg?seed=polarbear_chill'" alt="熊">
+            <div><b>不考分科熊</b><br><small>目標導向</small></div>
+        </div>
+        <div class="pet-option" onclick="selectPet('genius')">
+            <img src="https://api.dicebear.com/9.x/pixel-art/svg?seed=panda_smart" alt="熊">
+            <div><b>天才小熊</b><br><small>天賦異稟</small></div>
+        </div>
+    </div>
+
+    <div id="main-screen" class="main-screen" style="display:none;">
+        <div class="header">
+            <span>⏳ 倒數 <span id="countdown" style="color:#FFD700;"></span> 天</span>
+            <span>💰 <span id="coin-display">0</span></span>
+        </div>
+
+        <div class="dialogue-box" id="dialogue-text">歡迎回來！</div>
+
+        <div class="pet-device-border">
+            <div class="pet-screen-container" id="pet-screen">
+                <img id="pet-image" class="pet-image" src="" alt="Pet">
+                <div id="skull-icon" class="skull-popup">☠️</div>
+            </div>
+        </div>
+
+        <div style="text-align:center;">
+            <p class="pet-name" id="pet-name">名稱</p>
+            <p class="pet-stage" id="pet-stage-name">階段</p>
+        </div>
+
+        <div class="status-area">
+            <div class="bar-row">
+                <span class="bar-label">EXP</span>
+                <div class="progress-track"><div class="progress-fill exp-fill" id="exp-bar"></div></div>
+            </div>
+            <div class="bar-row">
+                <span class="bar-label">飽食</span>
+                <div class="progress-track"><div class="progress-fill hunger-fill" id="hunger-bar" style="width:100%"></div></div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-quiz" onclick="openQuiz()">📝 做題</button>
+            <button class="btn btn-shop" onclick="openShop()">🌭 餵食</button>
+        </div>
+
+        <div class="share-area">
+            <button class="btn-share" onclick="shareToLine()">
+                <span>💬</span> 分享到 LINE / 討拍
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="quiz-modal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0" id="quiz-title">每日挑戰</h3>
+        <div id="revive-status" style="display:none; color:#d32f2f; font-weight:bold; margin-bottom:10px;">
+            🔥 復活連對挑戰：<span id="streak-count">0</span> / 10
+        </div>
+        <div id="quiz-container"></div>
+        <button class="btn btn-quiz" id="next-q-btn" style="width:100%; margin-top:10px; display:none" onclick="loadQuestion()">下一題</button>
+        <button id="close-quiz-btn" onclick="closeModal('quiz-modal')" style="margin-top:10px; width:100%; border:none; background:none; color:#666; cursor:pointer">關閉</button>
+    </div>
+</div>
+
+<div id="shop-modal" class="modal"><div class="modal-content"><h3 style="margin-top:0">福利社 (持有: <span id="shop-coin">0</span>)</h3><div id="shop-items"></div><button onclick="closeModal('shop-modal')" style="margin-top:10px; width:100%; border:none; background:none; color:#666; cursor:pointer">離開</button></div></div>
+
+<script>
+    // ==========================================
+    // V7.2 設定區：您的 Google Sheet CSV 網址
+    // ==========================================
+    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1nHrAGkjigCD5ynjx0gnKYe1Ftx_l44Wdnnzpxo0-YQTl__g0tamkKW9Sn-BL1JUyy4Qh3xpCGr6L/pub?output=csv";
+    
+    const fallbackQuestions = [
+        { q: "在學科能力測驗中，選擇題必須使用哪一種筆在「答題卷」上作答？", opts: ["原子筆", "2B 鉛筆", "筆尖較粗的黑色墨水筆", "鋼筆"], ans: 1, exp: "選擇題用 2B 鉛筆在「答題卷」上作答。" },
+        { q: "若颱風行進路徑在同一水平面上，且颱風沿預測路徑持續前進不折返，則在物理學上可將颱風視為固定質量的何種物體？", opts: ["剛體", "流體", "質點", "彈性體"], ans: 2, exp: "假設颱風可視為固定質量的質點。" },
+        { q: "同位素的定義是？", opts: ["質子同，中子異", "質子異，電子同", "中子同", "質量數同"], ans: 0, exp: "同位素：原子序(質子)相同，質量數(中子)不同。" }
+    ];
+
+    let questions = fallbackQuestions; 
+
+    // --- V7.2 新增：全域計數器 (保底機制) ---
+    let totalQuestionsAnswered = 0; 
+
+    // --- 讀取 Google Sheet ---
+    async function fetchQuestions() {
+        if (!GOOGLE_SHEET_CSV_URL) return; 
+        
+        const loadingMsg = document.getElementById('loading-msg');
+        loadingMsg.innerText = "正在更新雲端題庫...";
+        
+        try {
+            const response = await fetch(GOOGLE_SHEET_CSV_URL);
+            const text = await response.text();
+            const parsed = parseCSV(text);
+            
+            if (parsed.length > 0) {
+                questions = parsed;
+                console.log(`成功載入 ${parsed.length} 題雲端題目`);
+                loadingMsg.innerText = "雲端題庫同步完成！";
+            }
+        } catch (e) {
+            console.error("題庫載入失敗", e);
+            loadingMsg.innerText = "連線不穩，使用離線題庫";
+        }
+    }
+
+    function parseCSV(text) {
+        const rows = text.split('\n').map(row => row.trim()).filter(row => row);
+        const newQuestions = [];
+        for (let i = 1; i < rows.length; i++) {
+            let cols = rows[i].split(','); 
+            if (cols.length < 7) continue; 
+            const clean = (str) => str ? str.replace(/^"|"$/g, '').trim() : "";
+            newQuestions.push({
+                q: clean(cols[0]),
+                opts: [clean(cols[1]), clean(cols[2]), clean(cols[3]), clean(cols[4])],
+                ans: parseInt(clean(cols[5])) - 1, 
+                exp: clean(cols[6])
+            });
+        }
+        return newQuestions;
+    }
+
+    // ------------------------------------------
+
+    let audioCtx;
+    function initAudio() {
+        if (!audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playSound(type) {
+        if(!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'correct') {
+            osc.type = 'sine'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+            gainNode.gain.setValueAtTime(0.3, now); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            osc.start(now); osc.stop(now + 0.5);
+        } else if (type === 'wrong') {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now); osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+            gainNode.gain.setValueAtTime(0.3, now); gainNode.gain.linearRampToValueAtTime(0.01, now + 0.4);
+            osc.start(now); osc.stop(now + 0.4);
+        } else if (type === 'eat') {
+            osc.type = 'square'; osc.frequency.setValueAtTime(200, now); osc.frequency.linearRampToValueAtTime(100, now + 0.1);
+            gainNode.gain.setValueAtTime(0.1, now); gainNode.gain.linearRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now); osc.stop(now + 0.15);
+        }
+    }
+
+    function enterGame() {
+        const splash = document.getElementById('splash-screen');
+        splash.style.opacity = '0';
+        setTimeout(() => splash.style.display = 'none', 500);
+        initAudio();
+    }
+
+    const petsData = {
+        steady: { name: "學測滿分熊", stages: ["筆記小毛球", "刷題眼鏡熊", "滿級分戰神熊"], images: ["brownbear_baby", "brownbear_teen", "brownbear_king"] },
+        goal: { name: "不考分科熊", stages: ["祈願御守蛋", "繁星上岸熊", "提早放假爽熊"], images: ["./images/polar_1.png", "./images/polar_2.png", "./images/polar_3.png"] },
+        genius: { name: "天才小熊", stages: ["靈光燈泡球", "資優跳級熊", "諾貝爾智者熊"], images: ["panda_bulb", "panda_lab", "panda_nobel"] }
+    };
+
+    const items = [
+        { name: "麵包", icon: "🍞", price: 15, exp: 10, hunger: 20 },
+        { name: "雞腿", icon: "🍗", price: 60, exp: 45, hunger: 50 },
+        { name: "慶功宴", icon: "🍱", price: 300, exp: 250, hunger: 100 }
+    ];
+
+    let state = { 
+        coins: 0, exp: 0, hunger: 80, pet: 'steady', level: 0, login: '', 
+        lastSaveTime: Date.now(), isDead: false, reviveChances: 3, startDate: Date.now()
+    };
+    let daysLeft = 0;
+    let reviveStreak = 0; 
+    let isReviveMode = false;
+
+    async function init() {
+        await fetchQuestions(); 
+
+        let save = localStorage.getItem('pet_v72'); // 更新 Key
+        if(save) {
+            state = JSON.parse(save);
+            if(state.isDead === undefined) state.isDead = false;
+            if(state.reviveChances === undefined) state.reviveChances = 3;
+            if(!state.startDate) state.startDate = Date.now();
+            checkHungerTime(); 
+            checkEvolutionHint();
+            renderGame();
+        }
+        updateCountdown();
+    }
+    
+    function checkHungerTime() {
+        const now = Date.now();
+        if (!state.lastSaveTime) state.lastSaveTime = now;
+        
+        const hoursPassed = (now - state.lastSaveTime) / (1000 * 60 * 60);
+
+        if (state.isDead) { showDeathScreen(); return; }
+
+        if (hoursPassed >= 48) {
+            state.hunger = 0;
+            state.isDead = true;
+            showDeathScreen();
+        } else {
+            const drops = Math.floor(hoursPassed / 3);
+            if (drops > 0) {
+                const decay = drops * 10;
+                state.hunger -= decay;
+                if (state.hunger < 0) state.hunger = 0;
+            }
+        }
+        state.lastSaveTime = now;
+        save();
+    }
+
+    function checkEvolutionHint() {
+        const now = Date.now();
+        const daysPlayed = Math.floor((now - state.startDate) / (1000 * 60 * 60 * 24));
+        if (daysPlayed > 0 && daysPlayed % 3 === 0 && state.level < 2) {
+            let maxExp = state.level === 0 ? 200 : 2200;
+            let diff = maxExp - state.exp;
+            if (diff > 0) {
+                alert(`📅 已經養了 ${daysPlayed} 天囉！\n加油！再收集 ${diff} 經驗值就能進化了！`);
+            }
+        }
+    }
+
+    function showDeathScreen() {
+        document.getElementById('death-screen').style.display = 'flex';
+        document.getElementById('revive-chances').innerText = state.reviveChances;
+    }
+
+    function startReviveChallenge() {
+        document.getElementById('incense-anim').style.display = 'block';
+        setTimeout(() => {
+            document.getElementById('incense-anim').style.display = 'none';
+            isReviveMode = true; reviveStreak = 0; openQuiz();
+        }, 2000);
+    }
+
+    function resetGame() {
+        if(confirm("😭 很遺憾，復活失敗...\n寵物已經離開了。\n\n確定要重新開始新的旅程嗎？")) {
+            localStorage.removeItem('pet_v72');
+            location.reload();
+        }
+    }
+
+    function selectPet(p) {
+        state.pet = p; state.coins = 50; state.login = new Date().toDateString(); 
+        state.lastSaveTime = Date.now(); state.startDate = Date.now();
+        save(); renderGame();
+        document.getElementById('splash-screen').style.display = 'none';
+    }
+
+    function renderGame() {
+        if (state.isDead) { showDeathScreen(); return; }
+
+        document.getElementById('select-screen').style.display = 'none';
+        document.getElementById('main-screen').style.display = 'flex';
+        
+        let pData = petsData[state.pet];
+        document.getElementById('coin-display').innerText = state.coins;
+        document.getElementById('shop-coin').innerText = state.coins;
+        document.getElementById('pet-name').innerText = pData.name;
+        document.getElementById('pet-stage-name').innerText = pData.stages[state.level];
+        
+        let imgSource = pData.images[state.level];
+        let imgUrl;
+        if (imgSource.includes('./') || imgSource.includes('images')) {
+            imgUrl = imgSource;
+        } else {
+            imgUrl = `https://api.dicebear.com/9.x/pixel-art/svg?seed=${imgSource}&scale=80`;
+        }
+        
+        const imgEl = document.getElementById('pet-image');
+        imgEl.onerror = function() { this.src = 'https://api.dicebear.com/9.x/pixel-art/svg?seed=fallback&scale=80'; };
+        imgEl.src = imgUrl;
+
+        let maxExp = state.level===2 ? 100 : 200; 
+        document.getElementById('exp-bar').style.width = (state.level===2 ? 100 : (state.exp/200)*100) + "%";
+        document.getElementById('hunger-bar').style.width = state.hunger + "%";
+        
+        updateCountdown();
+    }
+
+    function updateCountdown() {
+        const targetDate = new Date("2026-01-17T00:00:00").getTime();
+        const now = new Date().getTime();
+        const difference = targetDate - now;
+        daysLeft = Math.ceil(difference / (1000 * 60 * 60 * 24));
+        if (daysLeft < 0) daysLeft = 0;
+        document.getElementById('countdown').innerText = daysLeft;
+    }
+
+    function openQuiz() { 
+        if(!isReviveMode && state.hunger<=0) return alert("餓昏了！先餵食！");
+        document.getElementById('quiz-modal').style.display='flex'; 
+        
+        if (isReviveMode) {
+            document.getElementById('quiz-title').innerText = "⚰️ 復活挑戰 (需連對10題)";
+            document.getElementById('revive-status').style.display = 'block';
+            document.getElementById('streak-count').innerText = reviveStreak;
+            document.getElementById('close-quiz-btn').style.display = 'none';
+        } else {
+            document.getElementById('quiz-title').innerText = "每日挑戰";
+            document.getElementById('revive-status').style.display = 'none';
+            document.getElementById('close-quiz-btn').style.display = 'block';
+        }
+        
+        loadQuestion(); 
+    }
+    
+    // --- V7.2 修改：加入保底選題機制 ---
+    function loadQuestion() {
+        let qData;
+        totalQuestionsAnswered++; // 增加答題計數
+
+        // 判斷是否為第 10, 20, 30... 題 (且題庫數量足夠)
+        if (totalQuestionsAnswered % 10 === 0 && questions.length > 11) {
+            // 從第 0 筆到第 10 筆 (對應 Excel 第 2-12 列) 隨機選一題
+            // Array index 0 = Sheet row 2
+            const limit = Math.min(11, questions.length);
+            const specialIndex = Math.floor(Math.random() * limit);
+            qData = questions[specialIndex];
+            console.log("【保底機制觸發】選取核心題目 ID:", specialIndex);
+        } else {
+            // 正常隨機
+            const normalIndex = Math.floor(Math.random() * questions.length);
+            qData = questions[normalIndex];
+        }
+
+        let html = `<p><b>${qData.q}</b></p>`;
+        qData.opts.forEach((o,i) => html += `<button class="option" onclick="ans(${i}, ${qData.ans}, this)">${o}</button>`);
+        html += `<div id="expl" style="display:none; background:#eee; padding:5px; margin-top:5px; font-size:0.9em">${qData.exp}</div>`;
+        document.getElementById('quiz-container').innerHTML = html;
+        document.getElementById('next-q-btn').style.display='none';
+    }
+
+    function ans(i, ans, btn) {
+        let opts = document.querySelectorAll('.option');
+        opts.forEach(b=>b.disabled=true);
+        
+        if(i===ans) {
+            btn.classList.add('correct');
+            playSound('correct'); 
+            
+            if (isReviveMode) {
+                reviveStreak++;
+                document.getElementById('streak-count').innerText = reviveStreak;
+                if (reviveStreak >= 10) {
+                    alert("✨ 感動天！你的誠意讓寵物復活了！✨");
+                    state.isDead = false; state.hunger = 20; state.reviveChances = 3; state.lastSaveTime = Date.now();
+                    isReviveMode = false; save(); location.reload();
+                }
+            } else {
+                state.coins += 10; state.hunger -= 5;
+                if(state.hunger<0) state.hunger=0;
+                triggerCoinEffect();
+            }
+        } else {
+            btn.classList.add('wrong'); opts[ans].classList.add('correct');
+            playSound('wrong'); 
+            
+            if (isReviveMode) {
+                state.reviveChances--; save();
+                if (state.reviveChances <= 0) { setTimeout(resetGame, 500); } 
+                else { alert(`❌ 挑戰失敗！連對中斷。\n剩餘機會：${state.reviveChances} 次`); closeModal('quiz-modal'); showDeathScreen(); }
+                isReviveMode = false;
+            } else {
+                triggerWrongEffect();
+            }
+        }
+        document.getElementById('expl').style.display='block';
+        if (isReviveMode) { setTimeout(loadQuestion, 1500); } else { document.getElementById('next-q-btn').style.display='block'; }
+        if(!state.isDead) { save(); renderGame(); }
+    }
+    
+    function triggerCoinEffect() {
+        const coin = document.getElementById('coin-effect');
+        coin.classList.remove('animate-coin'); void coin.offsetWidth; coin.classList.add('animate-coin');
+    }
+
+    function triggerWrongEffect() {
+        const screen = document.getElementById('pet-screen');
+        const skull = document.getElementById('skull-icon');
+        screen.classList.add('screen-shake'); setTimeout(() => screen.classList.remove('screen-shake'), 500);
+        skull.classList.add('show-skull'); setTimeout(() => skull.classList.remove('show-skull'), 1000);
+    }
+
+    function openShop() {
+        document.getElementById('shop-modal').style.display='flex';
+        let html = '';
+        items.forEach((it, i) => {
+            html += `<div class="shop-item">
+                <div style="display:flex; align-items:center;">
+                    <span class="shop-item-icon">${it.icon}</span>
+                    <div><b>${it.name}</b> <small>(${it.exp}EXP)</small></div>
+                </div>
+                <button class="btn btn-shop" style="padding:5px 15px; flex:none" onclick="buy(${i})" ${state.coins<it.price?'disabled':''}>$${it.price}</button>
+            </div>`;
+        });
+        document.getElementById('shop-items').innerHTML = html;
+    }
+
+    function buy(i) {
+        let it = items[i];
+        if(state.coins >= it.price) {
+            state.coins -= it.price; state.exp += it.exp; state.hunger = Math.min(100, state.hunger + it.hunger);
+            if(state.level < 2 && state.exp >= 200) { state.level++; state.exp = 0; setTimeout(() => alert("✨ 進化了！"), 1500); }
+            playSound('eat'); triggerEatingAnimationFullscreen(it.icon);
+            save(); renderGame(); closeModal('shop-modal');
+        }
+    }
+
+    function triggerEatingAnimationFullscreen(iconEmoji) {
+        const effectLayer = document.getElementById('eating-effect-fullscreen');
+        effectLayer.innerText = iconEmoji;
+        effectLayer.classList.remove('is-eating-fullscreen'); void effectLayer.offsetWidth; effectLayer.classList.add('is-eating-fullscreen');
+        setTimeout(() => { effectLayer.classList.remove('is-eating-fullscreen'); }, 1500);
+    }
+
+    function shareToLine() {
+        const pName = petsData[state.pet].name;
+        let text = "";
+        if (state.hunger < 50) {
+            text = `🆘 救命啊！學測倒數 ${daysLeft} 天\n我的【${pName}】快餓扁了 (飽食度${state.hunger}%) 😭\n拜託誰來陪我刷兩題！\n\n#把時間留給家人\n#將學業交給obear`;
+        } else {
+            text = `🔥 狀態絕佳！學測倒數 ${daysLeft} 天\n我的【${pName}】吃飽飽 (飽食度${state.hunger}%) 💪\n今天也要全力以赴！\n\n#把時間留給家人\n#將學業交給obear`;
+        }
+        
+        const encodedText = encodeURIComponent(text);
+        window.open(`https://line.me/R/msg/text/?${encodedText}`, '_blank');
+    }
+
+    function closeModal(id) { document.getElementById(id).style.display='none'; }
+    function save() { state.lastSaveTime = Date.now(); localStorage.setItem('pet_v72', JSON.stringify(state)); }
+    
+    init(); 
+
+</script>
+</body>
+</html>
