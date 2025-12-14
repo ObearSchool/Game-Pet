@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>學霸養成計畫 - V7.2 雲端保底版</title>
+    <title>學霸養成計畫 - V9.0 完美刷題版</title>
     <style>
-        /* --- V7.2 樣式設定 --- */
+        /* --- V9.0 樣式設定 --- */
         :root {
             --brand-dark: #00509B;
             --brand-green: #78C878;
@@ -32,6 +32,7 @@
             -webkit-user-select: none;
         }
 
+        /* 品牌進場畫面 */
         #splash-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, var(--brand-dark), #003d7a);
@@ -39,7 +40,6 @@
             justify-content: center; align-items: center; color: white;
             text-align: center; padding: 20px; box-sizing: border-box; transition: opacity 0.5s;
         }
-        
         .splash-logo-img { width: 150px; height: auto; margin-bottom: 20px; animation: float 3s infinite ease-in-out; }
         .splash-slogan { font-size: 1.5em; font-weight: bold; line-height: 1.6; margin-bottom: 40px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
         .splash-btn {
@@ -50,6 +50,32 @@
         .splash-btn:active { transform: scale(0.95); }
         .loading-text { font-size: 0.9em; margin-top: 10px; color: #82AFE1; }
 
+        /* 彈窗樣式 */
+        .msg-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); z-index: 9500;
+            display: none; justify-content: center; align-items: center;
+            backdrop-filter: blur(2px);
+        }
+        .msg-content {
+            background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 320px;
+            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 3px solid var(--brand-dark);
+            animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .msg-title { font-size: 1.3em; font-weight: bold; color: var(--brand-dark); margin-bottom: 15px; }
+        .msg-text { font-size: 1.1em; line-height: 1.5; color: #555; margin-bottom: 20px; }
+        .msg-input {
+            width: 80%; padding: 10px; font-size: 1.1em; border: 2px solid #ccc; border-radius: 8px;
+            margin-bottom: 20px; text-align: center; outline: none;
+        }
+        .msg-input:focus { border-color: var(--brand-dark); }
+        .msg-btn {
+            padding: 10px 25px; background-color: var(--brand-dark); color: white;
+            border: none; border-radius: 10px; font-size: 1em; font-weight: bold; cursor: pointer;
+        }
+
+        /* 死亡畫面 */
         #death-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.9); z-index: 9000;
@@ -65,6 +91,7 @@
         #incense-anim { display: none; font-size: 60px; margin-bottom: 20px; animation: smoke 2s infinite; }
         @keyframes smoke { 0% { opacity: 0.5; transform: translateY(0); filter: blur(0px); } 50% { opacity: 1; transform: translateY(-10px); filter: blur(2px); } 100% { opacity: 0.5; transform: translateY(0); filter: blur(0px); } }
 
+        /* 主容器 */
         .container {
             width: 100%; max-width: 400px; background-color: #ffffff;
             border-radius: 20px; box-shadow: 0 10px 25px rgba(0, 50, 100, 0.2);
@@ -109,8 +136,7 @@
             100% { transform: translateX(-25px) scaleX(1); }
         }
 
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-
+        /* 特效 CSS */
         .eating-effect-fullscreen {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
             font-size: 80px; z-index: 9999; opacity: 0; pointer-events: none;
@@ -139,6 +165,7 @@
         @keyframes shake-hard { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(-5px, 5px); } 50% { transform: translate(5px, -5px); } 75% { transform: translate(-5px, -5px); } }
         @keyframes pop-skull { 0% { transform: scale(0); } 50% { transform: scale(1.5); } 100% { transform: scale(1); } }
         @keyframes wiggle-big { from { margin-top: -8px; transform: translate(-50%, -50%) rotate(-10deg); } to { margin-top: 8px; transform: translate(-50%, -50%) rotate(10deg); } }
+        @keyframes pop-in { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
         .pet-name { font-size: 1.2em; font-weight: bold; color: var(--brand-dark); margin: 5px 0 0 0; }
         .pet-stage { color: var(--brand-light); font-size: 0.8em; margin-bottom: 10px; }
@@ -196,12 +223,26 @@
 
 <div id="splash-screen">
     <img src="./images/logo.png" class="splash-logo-img" alt="obear logo" onerror="this.style.display='none'; this.nextElementSibling.innerText='🐻';"> 
-    <div class="splash-slogan">
-        把時間留給家人<br>
-        將學業交給 obear
-    </div>
+    <div class="splash-slogan">把時間留給家人<br>將學業交給 obear</div>
     <button class="splash-btn" onclick="enterGame()">進入遊戲</button>
     <div id="loading-msg" class="loading-text"></div>
+</div>
+
+<div id="name-modal" class="msg-modal">
+    <div class="msg-content">
+        <div class="msg-title">👋 同學你好！</div>
+        <div class="msg-text">為了讓寵物認得你，<br>請輸入你的名字或暱稱：</div>
+        <input type="text" id="player-name-input" class="msg-input" placeholder="例如：小明" maxlength="10">
+        <button class="msg-btn" onclick="submitName()">確認</button>
+    </div>
+</div>
+
+<div id="quote-modal" class="msg-modal">
+    <div class="msg-content">
+        <div class="msg-title" id="quote-title">💪 今日能量補給</div>
+        <div id="quote-text" class="msg-text" style="font-style: italic; color:#00509B;"></div>
+        <button class="msg-btn" onclick="closeModal('quote-modal')">收到了！</button>
+    </div>
 </div>
 
 <div id="death-screen">
@@ -238,7 +279,10 @@
             <span>💰 <span id="coin-display">0</span></span>
         </div>
 
-        <div class="dialogue-box" id="dialogue-text">歡迎回來！</div>
+        <div class="dialogue-box">
+            歡迎回來，<span id="display-player-name" style="color:#00509B; font-weight:bold;">同學</span>！<br>
+            <span style="font-size:0.8em; color:#666;">今天也要加油喔！</span>
+        </div>
 
         <div class="pet-device-border">
             <div class="pet-screen-container" id="pet-screen">
@@ -291,11 +335,34 @@
 <div id="shop-modal" class="modal"><div class="modal-content"><h3 style="margin-top:0">福利社 (持有: <span id="shop-coin">0</span>)</h3><div id="shop-items"></div><button onclick="closeModal('shop-modal')" style="margin-top:10px; width:100%; border:none; background:none; color:#666; cursor:pointer">離開</button></div></div>
 
 <script>
-    // ==========================================
-    // V7.2 設定區：您的 Google Sheet CSV 網址
-    // ==========================================
     const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1nHrAGkjigCD5ynjx0gnKYe1Ftx_l44Wdnnzpxo0-YQTl__g0tamkKW9Sn-BL1JUyy4Qh3xpCGr6L/pub?output=csv";
     
+    // 每日隨機金句 (40句)
+    const motivationalQuotes = [
+        "今天的努力，是為了未來的選擇權！", "不要假裝努力，結果不會陪你演戲。", "星光不問趕路人，時光不負有心人。",
+        "你讀過的書，會變成你未來的路。", "現在流的汗，會變成考場上的分。", "堅持下去，你比想像中更強大！",
+        "學測是一場馬拉松，配速比衝刺重要。", "每天進步 1%，一年後你會變強 37 倍。", "當你覺得累時，想想當初為什麼出發。",
+        "耐得住寂寞，才守得住繁華。", "這題不會沒關係，弄懂它就是賺到！", "上帝是公平的，你長這樣，書一定讀得會！",
+        "你的對手還在翻書，你不能停下腳步。", "現在的苦，是為了以後能笑著回顧。", "相信自己，你離夢想只差堅持。",
+        "乾坤未定，你我皆是黑馬！", "不需要很厲害才能開始，但要開始才能很厲害。", "專注當下，每一分每一秒都算數。",
+        "與其焦慮，不如多背一個單字。", "你有宇宙最強的自然老師教你，怎麼可能不會？", "你的大腦有 70% 是水，別晃，快裝點知識進去。",
+        "萬有引力定律告訴我們：你吸引不了異性，但你可以吸引知識。", "別低頭，雙下巴會跑出來；別流淚，考卷溼了很難寫。",
+        "現在流的口水，都會變成考場上的淚水喔。", "雖然長得醜，但是我們想得美啊！衝了啦！", "其實你不是不會，你是懶。obear 的眼睛是雪亮的。",
+        "讀書很累？這世界上有不累的事嗎？有啊，做夢。", "能量守恆定律：你現在付出的努力，未來會轉化為新台幣。",
+        "F=ma，給自己一點 Force，你就會有 Acceleration！", "你的手機沒有在想你，但你的講義在哭，快去安慰它。",
+        "別懷疑，全宇宙最會教物理的男人就在你面前。", "我教的不是物理，是真理！跟著黑熊老師走就對了。",
+        "你的物理成績上不去？那是因為你太晚遇到我了。", "這題型我講過八百遍，連我家隔壁的狗都會背了。",
+        "不要崇拜哥，哥只是個傳說... 但哥教出來的學生都是傳奇。", "信黑熊得滿分！這不是迷信，這是大數據統計。",
+        "考場上遇到不會的，閉上眼想想黑熊老師的帥臉，靈感就來了。", "我這堂課的含金量，高到元素週期表都裝不下！",
+        "為什麼我這麼強？天賦這種東西是很殘酷的，你只要負責努力就好。", "只要你還有呼吸，黑熊老師就有辦法把你救起來！"
+    ];
+
+    // 特殊獎勵金句
+    const specialMilestoneQuotes = [
+        "信上帝得永生，信黑熊會得分，你要有信仰，對黑熊的信仰！",
+        "上帝是公平的，你長這樣，一定學的起來！"
+    ];
+
     const fallbackQuestions = [
         { q: "在學科能力測驗中，選擇題必須使用哪一種筆在「答題卷」上作答？", opts: ["原子筆", "2B 鉛筆", "筆尖較粗的黑色墨水筆", "鋼筆"], ans: 1, exp: "選擇題用 2B 鉛筆在「答題卷」上作答。" },
         { q: "若颱風行進路徑在同一水平面上，且颱風沿預測路徑持續前進不折返，則在物理學上可將颱風視為固定質量的何種物體？", opts: ["剛體", "流體", "質點", "彈性體"], ans: 2, exp: "假設颱風可視為固定質量的質點。" },
@@ -303,22 +370,15 @@
     ];
 
     let questions = fallbackQuestions; 
-
-    // --- V7.2 新增：全域計數器 (保底機制) ---
-    let totalQuestionsAnswered = 0; 
-
-    // --- 讀取 Google Sheet ---
+    
     async function fetchQuestions() {
         if (!GOOGLE_SHEET_CSV_URL) return; 
-        
         const loadingMsg = document.getElementById('loading-msg');
         loadingMsg.innerText = "正在更新雲端題庫...";
-        
         try {
             const response = await fetch(GOOGLE_SHEET_CSV_URL);
             const text = await response.text();
             const parsed = parseCSV(text);
-            
             if (parsed.length > 0) {
                 questions = parsed;
                 console.log(`成功載入 ${parsed.length} 題雲端題目`);
@@ -346,8 +406,6 @@
         }
         return newQuestions;
     }
-
-    // ------------------------------------------
 
     let audioCtx;
     function initAudio() {
@@ -386,6 +444,40 @@
         splash.style.opacity = '0';
         setTimeout(() => splash.style.display = 'none', 500);
         initAudio();
+        
+        if (!state.playerName) {
+            document.getElementById('name-modal').style.display = 'flex';
+        } else {
+            showRandomQuote();
+        }
+    }
+
+    function submitName() {
+        const nameInput = document.getElementById('player-name-input');
+        const name = nameInput.value.trim();
+        if (name) {
+            state.playerName = name;
+            save();
+            document.getElementById('name-modal').style.display = 'none';
+            renderGame(); 
+            showRandomQuote(); 
+        } else {
+            alert("請輸入一個暱稱喔！");
+        }
+    }
+
+    function showRandomQuote() {
+        const quote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+        document.getElementById('quote-title').innerText = "💪 今日能量補給";
+        document.getElementById('quote-text').innerText = quote;
+        document.getElementById('quote-modal').style.display = 'flex';
+    }
+
+    function showSpecialQuote() {
+        const quote = specialMilestoneQuotes[Math.floor(Math.random() * specialMilestoneQuotes.length)];
+        document.getElementById('quote-title').innerText = "✨ 黑熊信仰加持 ✨";
+        document.getElementById('quote-text').innerText = quote;
+        document.getElementById('quote-modal').style.display = 'flex';
     }
 
     const petsData = {
@@ -400,23 +492,31 @@
         { name: "慶功宴", icon: "🍱", price: 300, exp: 250, hunger: 100 }
     ];
 
+    // V9.0 State 升級：增加 seenQuestions, reviewQueue, totalAnswered
     let state = { 
         coins: 0, exp: 0, hunger: 80, pet: 'steady', level: 0, login: '', 
-        lastSaveTime: Date.now(), isDead: false, reviveChances: 3, startDate: Date.now()
+        lastSaveTime: Date.now(), isDead: false, reviveChances: 3, startDate: Date.now(),
+        playerName: "", 
+        seenQuestions: [], // 已回答過的題目索引
+        reviewQueue: [], // 錯題複習隊列 {index, targetTurn}
+        totalAnswered: 0, // 總答題數
+        correctStreak: 0 // 連續答對 (for revive)
     };
+    
     let daysLeft = 0;
-    let reviveStreak = 0; 
     let isReviveMode = false;
+    let sessionCorrectCount = 0; // 本次session答對計數 (for 金句獎勵)
 
     async function init() {
         await fetchQuestions(); 
 
-        let save = localStorage.getItem('pet_v72'); // 更新 Key
+        let save = localStorage.getItem('pet_v90'); // V9.0 Key
         if(save) {
-            state = JSON.parse(save);
-            if(state.isDead === undefined) state.isDead = false;
-            if(state.reviveChances === undefined) state.reviveChances = 3;
-            if(!state.startDate) state.startDate = Date.now();
+            let loaded = JSON.parse(save);
+            // 合併舊資料與新結構
+            state = { ...state, ...loaded };
+            
+            // 檢查日期與飢餓
             checkHungerTime(); 
             checkEvolutionHint();
             renderGame();
@@ -427,15 +527,12 @@
     function checkHungerTime() {
         const now = Date.now();
         if (!state.lastSaveTime) state.lastSaveTime = now;
-        
         const hoursPassed = (now - state.lastSaveTime) / (1000 * 60 * 60);
 
         if (state.isDead) { showDeathScreen(); return; }
 
         if (hoursPassed >= 48) {
-            state.hunger = 0;
-            state.isDead = true;
-            showDeathScreen();
+            state.hunger = 0; state.isDead = true; showDeathScreen();
         } else {
             const drops = Math.floor(hoursPassed / 3);
             if (drops > 0) {
@@ -455,7 +552,7 @@
             let maxExp = state.level === 0 ? 200 : 2200;
             let diff = maxExp - state.exp;
             if (diff > 0) {
-                alert(`📅 已經養了 ${daysPlayed} 天囉！\n加油！再收集 ${diff} 經驗值就能進化了！`);
+                console.log(`加油！再收集 ${diff} 經驗值就能進化了！`);
             }
         }
     }
@@ -469,13 +566,13 @@
         document.getElementById('incense-anim').style.display = 'block';
         setTimeout(() => {
             document.getElementById('incense-anim').style.display = 'none';
-            isReviveMode = true; reviveStreak = 0; openQuiz();
+            isReviveMode = true; state.correctStreak = 0; openQuiz();
         }, 2000);
     }
 
     function resetGame() {
         if(confirm("😭 很遺憾，復活失敗...\n寵物已經離開了。\n\n確定要重新開始新的旅程嗎？")) {
-            localStorage.removeItem('pet_v72');
+            localStorage.removeItem('pet_v90');
             location.reload();
         }
     }
@@ -485,6 +582,7 @@
         state.lastSaveTime = Date.now(); state.startDate = Date.now();
         save(); renderGame();
         document.getElementById('splash-screen').style.display = 'none';
+        document.getElementById('name-modal').style.display = 'flex';
     }
 
     function renderGame() {
@@ -496,9 +594,15 @@
         let pData = petsData[state.pet];
         document.getElementById('coin-display').innerText = state.coins;
         document.getElementById('shop-coin').innerText = state.coins;
-        document.getElementById('pet-name').innerText = pData.name;
         document.getElementById('pet-stage-name').innerText = pData.stages[state.level];
         
+        if(state.playerName) {
+            document.getElementById('display-player-name').innerText = state.playerName;
+            document.getElementById('pet-name').innerText = `${state.playerName} 的 ${pData.name}`;
+        } else {
+            document.getElementById('pet-name').innerText = pData.name;
+        }
+
         let imgSource = pData.images[state.level];
         let imgUrl;
         if (imgSource.includes('./') || imgSource.includes('images')) {
@@ -534,7 +638,7 @@
         if (isReviveMode) {
             document.getElementById('quiz-title').innerText = "⚰️ 復活挑戰 (需連對10題)";
             document.getElementById('revive-status').style.display = 'block';
-            document.getElementById('streak-count').innerText = reviveStreak;
+            document.getElementById('streak-count').innerText = state.correctStreak;
             document.getElementById('close-quiz-btn').style.display = 'none';
         } else {
             document.getElementById('quiz-title').innerText = "每日挑戰";
@@ -545,24 +649,54 @@
         loadQuestion(); 
     }
     
-    // --- V7.2 修改：加入保底選題機制 ---
-    function loadQuestion() {
-        let qData;
-        totalQuestionsAnswered++; // 增加答題計數
+    // --- V9.0 核心選題邏輯 ---
+    let currentQIndex = -1; // 暫存當前題目 index
 
-        // 判斷是否為第 10, 20, 30... 題 (且題庫數量足夠)
-        if (totalQuestionsAnswered % 10 === 0 && questions.length > 11) {
-            // 從第 0 筆到第 10 筆 (對應 Excel 第 2-12 列) 隨機選一題
-            // Array index 0 = Sheet row 2
+    function loadQuestion() {
+        let qIndex = -1;
+        state.totalAnswered++; 
+
+        // 1. 優先檢查【復仇筆記本】 (錯題重現)
+        // 找出所有 target <= 現在題數 的題目
+        let reviewItemIndex = state.reviewQueue.findIndex(item => item.target <= state.totalAnswered);
+        
+        if (reviewItemIndex !== -1) {
+            qIndex = state.reviewQueue[reviewItemIndex].index;
+            // 從隊列中移除
+            state.reviewQueue.splice(reviewItemIndex, 1);
+            console.log("【復仇模式】重考錯題 ID:", qIndex);
+        } 
+        // 2. 其次檢查【保底機制】 (每10題考核心)
+        else if (state.totalAnswered % 10 === 0 && questions.length > 11) {
             const limit = Math.min(11, questions.length);
-            const specialIndex = Math.floor(Math.random() * limit);
-            qData = questions[specialIndex];
-            console.log("【保底機制觸發】選取核心題目 ID:", specialIndex);
-        } else {
-            // 正常隨機
-            const normalIndex = Math.floor(Math.random() * questions.length);
-            qData = questions[normalIndex];
+            qIndex = Math.floor(Math.random() * limit);
+            console.log("【保底機制】考核心題 ID:", qIndex);
         }
+        // 3. 最後【不重複隨機】
+        else {
+            // 建立可用題目池 (全部題目 - 已讀題目)
+            // 注意：為了效能，若題庫過大可優化，這裡用簡單 filter
+            let availableIndices = [];
+            for(let i=0; i<questions.length; i++) {
+                if(!state.seenQuestions.includes(i)) availableIndices.push(i);
+            }
+
+            if (availableIndices.length === 0) {
+                // 全部做完，重置！
+                state.seenQuestions = [];
+                availableIndices = Array.from(Array(questions.length).keys());
+                // alert("恭喜刷完一輪題庫！題目將重新開始！");
+            }
+
+            let rand = Math.floor(Math.random() * availableIndices.length);
+            qIndex = availableIndices[rand];
+            
+            // 加入已讀 (只有隨機抽的才加入已讀，錯題重考不算已讀)
+            state.seenQuestions.push(qIndex);
+        }
+
+        currentQIndex = qIndex; // 記錄當前題目
+        let qData = questions[qIndex];
 
         let html = `<p><b>${qData.q}</b></p>`;
         qData.opts.forEach((o,i) => html += `<button class="option" onclick="ans(${i}, ${qData.ans}, this)">${o}</button>`);
@@ -576,13 +710,14 @@
         opts.forEach(b=>b.disabled=true);
         
         if(i===ans) {
+            // 答對
             btn.classList.add('correct');
             playSound('correct'); 
             
             if (isReviveMode) {
-                reviveStreak++;
-                document.getElementById('streak-count').innerText = reviveStreak;
-                if (reviveStreak >= 10) {
+                state.correctStreak++;
+                document.getElementById('streak-count').innerText = state.correctStreak;
+                if (state.correctStreak >= 10) {
                     alert("✨ 感動天！你的誠意讓寵物復活了！✨");
                     state.isDead = false; state.hunger = 20; state.reviveChances = 3; state.lastSaveTime = Date.now();
                     isReviveMode = false; save(); location.reload();
@@ -591,8 +726,15 @@
                 state.coins += 10; state.hunger -= 5;
                 if(state.hunger<0) state.hunger=0;
                 triggerCoinEffect();
+                
+                // V8.1: 每答對10題金句獎勵
+                sessionCorrectCount++;
+                if (sessionCorrectCount > 0 && sessionCorrectCount % 10 === 0) {
+                    showSpecialQuote();
+                }
             }
         } else {
+            // 答錯
             btn.classList.add('wrong'); opts[ans].classList.add('correct');
             playSound('wrong'); 
             
@@ -603,6 +745,16 @@
                 isReviveMode = false;
             } else {
                 triggerWrongEffect();
+                // V9.0: 錯題加入復仇筆記本 (10題後重現)
+                if (currentQIndex !== -1) {
+                    // 避免重複加入
+                    if (!state.reviewQueue.some(item => item.index === currentQIndex)) {
+                        state.reviewQueue.push({
+                            index: currentQIndex,
+                            target: state.totalAnswered + 10
+                        });
+                    }
+                }
             }
         }
         document.getElementById('expl').style.display='block';
@@ -655,20 +807,19 @@
     }
 
     function shareToLine() {
-        const pName = petsData[state.pet].name;
+        const pName = document.getElementById('pet-name').innerText; 
         let text = "";
         if (state.hunger < 50) {
             text = `🆘 救命啊！學測倒數 ${daysLeft} 天\n我的【${pName}】快餓扁了 (飽食度${state.hunger}%) 😭\n拜託誰來陪我刷兩題！\n\n#把時間留給家人\n#將學業交給obear`;
         } else {
             text = `🔥 狀態絕佳！學測倒數 ${daysLeft} 天\n我的【${pName}】吃飽飽 (飽食度${state.hunger}%) 💪\n今天也要全力以赴！\n\n#把時間留給家人\n#將學業交給obear`;
         }
-        
         const encodedText = encodeURIComponent(text);
         window.open(`https://line.me/R/msg/text/?${encodedText}`, '_blank');
     }
 
     function closeModal(id) { document.getElementById(id).style.display='none'; }
-    function save() { state.lastSaveTime = Date.now(); localStorage.setItem('pet_v72', JSON.stringify(state)); }
+    function save() { state.lastSaveTime = Date.now(); localStorage.setItem('pet_v90', JSON.stringify(state)); }
     
     init(); 
 
