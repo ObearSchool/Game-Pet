@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>學霸養成計畫 - V9.0 完美刷題版</title>
+    <title>學霸養成計畫 - V9.1 毒舌最終版</title>
     <style>
-        /* --- V9.0 樣式設定 --- */
+        /* --- V9.1 樣式設定 --- */
         :root {
             --brand-dark: #00509B;
             --brand-green: #78C878;
@@ -337,24 +337,48 @@
 <script>
     const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1nHrAGkjigCD5ynjx0gnKYe1Ftx_l44Wdnnzpxo0-YQTl__g0tamkKW9Sn-BL1JUyy4Qh3xpCGr6L/pub?output=csv";
     
-    // 每日隨機金句 (40句)
+    // 🔥 V9.1: 40句毒舌 + 吹牛金句 (已修正)
     const motivationalQuotes = [
-        "今天的努力，是為了未來的選擇權！", "不要假裝努力，結果不會陪你演戲。", "星光不問趕路人，時光不負有心人。",
-        "你讀過的書，會變成你未來的路。", "現在流的汗，會變成考場上的分。", "堅持下去，你比想像中更強大！",
-        "學測是一場馬拉松，配速比衝刺重要。", "每天進步 1%，一年後你會變強 37 倍。", "當你覺得累時，想想當初為什麼出發。",
-        "耐得住寂寞，才守得住繁華。", "這題不會沒關係，弄懂它就是賺到！", "上帝是公平的，你長這樣，書一定讀得會！",
-        "你的對手還在翻書，你不能停下腳步。", "現在的苦，是為了以後能笑著回顧。", "相信自己，你離夢想只差堅持。",
-        "乾坤未定，你我皆是黑馬！", "不需要很厲害才能開始，但要開始才能很厲害。", "專注當下，每一分每一秒都算數。",
-        "與其焦慮，不如多背一個單字。", "你有宇宙最強的自然老師教你，怎麼可能不會？", "你的大腦有 70% 是水，別晃，快裝點知識進去。",
-        "萬有引力定律告訴我們：你吸引不了異性，但你可以吸引知識。", "別低頭，雙下巴會跑出來；別流淚，考卷溼了很難寫。",
-        "現在流的口水，都會變成考場上的淚水喔。", "雖然長得醜，但是我們想得美啊！衝了啦！", "其實你不是不會，你是懶。obear 的眼睛是雪亮的。",
-        "讀書很累？這世界上有不累的事嗎？有啊，做夢。", "能量守恆定律：你現在付出的努力，未來會轉化為新台幣。",
-        "F=ma，給自己一點 Force，你就會有 Acceleration！", "你的手機沒有在想你，但你的講義在哭，快去安慰它。",
-        "別懷疑，全宇宙最會教物理的男人就在你面前。", "我教的不是物理，是真理！跟著黑熊老師走就對了。",
-        "你的物理成績上不去？那是因為你太晚遇到我了。", "這題型我講過八百遍，連我家隔壁的狗都會背了。",
-        "不要崇拜哥，哥只是個傳說... 但哥教出來的學生都是傳奇。", "信黑熊得滿分！這不是迷信，這是大數據統計。",
-        "考場上遇到不會的，閉上眼想想黑熊老師的帥臉，靈感就來了。", "我這堂課的含金量，高到元素週期表都裝不下！",
-        "為什麼我這麼強？天賦這種東西是很殘酷的，你只要負責努力就好。", "只要你還有呼吸，黑熊老師就有辦法把你救起來！"
+        "上帝是公平的，你長這樣，書一定讀得會！",
+        "你有宇宙最強的自然老師教你，怎麼可能不會？",
+        "你的對手現在正在翻書，而你...還在看這行字？",
+        "你的大腦有 70% 是水，別晃，快裝點知識進去讓它變乾貨。",
+        "萬有引力定律告訴我們：你吸引不了異性，但你可以吸引知識。",
+        "別低頭，雙下巴會跑出來；別流淚，考卷溼了很難寫。",
+        "現在流的口水，都會變成考場上的淚水喔。",
+        "雖然長得醜，但是我們想得美啊！衝了啦！",
+        "考不好沒關係，頂多回家繼承家業... 喔抱歉，你沒有家業。",
+        "能量守恆定律：你現在付出的努力，未來會轉化為新台幣。",
+        "其實你不是不會，你是懶。obear 的眼睛是雪亮的。",
+        "你的潛力就像牙膏，擠一擠總是有的，別放棄！",
+        "你這麼聰明，要是再努力一點，讓其他人怎麼活？",
+        "別人的終點是羅馬，沒關係，我們是牛馬，我們跑得快！",
+        "讀書很累？這世界上有不累的事嗎？有啊，做夢。",
+        "失敗是成功之母，但你不想讓失敗「子孫滿堂」吧？快去刷題！",
+        "F=ma，給自己一點 Force (力量)，你就會有 Acceleration (加速度)！",
+        "你的顏值已經夠高了，再有點才華，這世界就太不公平了。",
+        "不要問為什麼要讀書，因為除了讀書，你好像也不會別的？",
+        "堅持下去！不然以後同學會，你只能負責幫忙夾菜。",
+        "天將降大任於斯人也，必先卸其手機，關其網路。",
+        "腦袋空空沒關係，別連口袋也空空（快去讀書賺錢）。",
+        "數學不會背叛你，因為它不會就是不會... 但物理可以！",
+        "你離第一志願只差一點點... 大概 500 分而已，追上去！",
+        "今天不學習，明天變垃圾；今天努力刷，明天當學霸。",
+        "只要讀不死，就往死裡讀！",
+        "只有學測考好了，你才能在大學裡優雅地談戀愛。",
+        "你的手機沒有在想你，但你的講義在哭，快去安慰它。",
+        "放心，obear 會一直陪你，畢竟我也哪裡都去不了。",
+        "既然上了賊船，就要當個快樂的海盜！刷題去！",
+        "別懷疑，全宇宙最會教物理的男人就在你面前。",
+        "我教的不是物理，是真理！跟著黑熊老師走就對了。",
+        "你的物理成績上不去？那是因為你太晚遇到我了。",
+        "這題型我講過八百遍，連我家隔壁的狗都會背了。",
+        "不要崇拜哥，哥只是個傳說... 但哥教出來的學生都是傳奇。",
+        "信黑熊得滿分！這不是迷信，這是大數據統計。",
+        "考場上遇到不會的，閉上眼想想黑熊老師的帥臉，靈感就來了。",
+        "我這堂課的含金量，高到元素週期表都裝不下！",
+        "為什麼我這麼強？天賦這種東西是很殘酷的，你只要負責努力就好。",
+        "只要你還有呼吸，黑熊老師就有辦法把你救起來！"
     ];
 
     // 特殊獎勵金句
@@ -370,7 +394,9 @@
     ];
 
     let questions = fallbackQuestions; 
-    
+    let totalQuestionsAnswered = 0; 
+    let totalCorrectCount = 0;
+
     async function fetchQuestions() {
         if (!GOOGLE_SHEET_CSV_URL) return; 
         const loadingMsg = document.getElementById('loading-msg');
@@ -492,7 +518,7 @@
         { name: "慶功宴", icon: "🍱", price: 300, exp: 250, hunger: 100 }
     ];
 
-    // V9.0 State 升級：增加 seenQuestions, reviewQueue, totalAnswered
+    // V9.1 State 升級：增加 seenQuestions, reviewQueue, totalAnswered
     let state = { 
         coins: 0, exp: 0, hunger: 80, pet: 'steady', level: 0, login: '', 
         lastSaveTime: Date.now(), isDead: false, reviveChances: 3, startDate: Date.now(),
@@ -510,13 +536,10 @@
     async function init() {
         await fetchQuestions(); 
 
-        let save = localStorage.getItem('pet_v90'); // V9.0 Key
+        let save = localStorage.getItem('pet_v91'); // V9.1 Key
         if(save) {
             let loaded = JSON.parse(save);
-            // 合併舊資料與新結構
             state = { ...state, ...loaded };
-            
-            // 檢查日期與飢餓
             checkHungerTime(); 
             checkEvolutionHint();
             renderGame();
@@ -572,7 +595,7 @@
 
     function resetGame() {
         if(confirm("😭 很遺憾，復活失敗...\n寵物已經離開了。\n\n確定要重新開始新的旅程嗎？")) {
-            localStorage.removeItem('pet_v90');
+            localStorage.removeItem('pet_v91');
             location.reload();
         }
     }
@@ -649,53 +672,48 @@
         loadQuestion(); 
     }
     
-    // --- V9.0 核心選題邏輯 ---
-    let currentQIndex = -1; // 暫存當前題目 index
+    // --- V9.1 核心選題邏輯 (含不重複 + 保底 + 錯題) ---
+    let currentQIndex = -1; 
 
     function loadQuestion() {
         let qIndex = -1;
         state.totalAnswered++; 
 
-        // 1. 優先檢查【復仇筆記本】 (錯題重現)
-        // 找出所有 target <= 現在題數 的題目
+        // 1. 復仇模式 (錯題優先)
         let reviewItemIndex = state.reviewQueue.findIndex(item => item.target <= state.totalAnswered);
         
         if (reviewItemIndex !== -1) {
             qIndex = state.reviewQueue[reviewItemIndex].index;
-            // 從隊列中移除
             state.reviewQueue.splice(reviewItemIndex, 1);
             console.log("【復仇模式】重考錯題 ID:", qIndex);
         } 
-        // 2. 其次檢查【保底機制】 (每10題考核心)
+        // 2. 保底模式 (每10題考核心)
         else if (state.totalAnswered % 10 === 0 && questions.length > 11) {
             const limit = Math.min(11, questions.length);
             qIndex = Math.floor(Math.random() * limit);
             console.log("【保底機制】考核心題 ID:", qIndex);
         }
-        // 3. 最後【不重複隨機】
+        // 3. 不重複隨機
         else {
-            // 建立可用題目池 (全部題目 - 已讀題目)
-            // 注意：為了效能，若題庫過大可優化，這裡用簡單 filter
             let availableIndices = [];
             for(let i=0; i<questions.length; i++) {
                 if(!state.seenQuestions.includes(i)) availableIndices.push(i);
             }
 
             if (availableIndices.length === 0) {
-                // 全部做完，重置！
+                // 重置題庫
                 state.seenQuestions = [];
                 availableIndices = Array.from(Array(questions.length).keys());
-                // alert("恭喜刷完一輪題庫！題目將重新開始！");
             }
 
             let rand = Math.floor(Math.random() * availableIndices.length);
             qIndex = availableIndices[rand];
             
-            // 加入已讀 (只有隨機抽的才加入已讀，錯題重考不算已讀)
+            // 隨機抽的才加入已讀
             state.seenQuestions.push(qIndex);
         }
 
-        currentQIndex = qIndex; // 記錄當前題目
+        currentQIndex = qIndex; 
         let qData = questions[qIndex];
 
         let html = `<p><b>${qData.q}</b></p>`;
@@ -727,9 +745,9 @@
                 if(state.hunger<0) state.hunger=0;
                 triggerCoinEffect();
                 
-                // V8.1: 每答對10題金句獎勵
-                sessionCorrectCount++;
-                if (sessionCorrectCount > 0 && sessionCorrectCount % 10 === 0) {
+                // V8.1: 每答對10題跳出特殊鼓勵
+                totalCorrectCount++;
+                if (totalCorrectCount > 0 && totalCorrectCount % 10 === 0) {
                     showSpecialQuote();
                 }
             }
@@ -745,9 +763,8 @@
                 isReviveMode = false;
             } else {
                 triggerWrongEffect();
-                // V9.0: 錯題加入復仇筆記本 (10題後重現)
+                // 錯題加入復仇筆記本
                 if (currentQIndex !== -1) {
-                    // 避免重複加入
                     if (!state.reviewQueue.some(item => item.index === currentQIndex)) {
                         state.reviewQueue.push({
                             index: currentQIndex,
@@ -819,7 +836,7 @@
     }
 
     function closeModal(id) { document.getElementById(id).style.display='none'; }
-    function save() { state.lastSaveTime = Date.now(); localStorage.setItem('pet_v90', JSON.stringify(state)); }
+    function save() { state.lastSaveTime = Date.now(); localStorage.setItem('pet_v91', JSON.stringify(state)); }
     
     init(); 
 
