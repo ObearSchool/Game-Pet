@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>學霸養成計畫 - V9.1 毒舌最終版</title>
+    <title>學霸養成計畫 - V9.2 復活修復版</title>
     <style>
-        /* --- V9.1 樣式設定 --- */
+        /* --- V9.2 樣式設定 --- */
         :root {
             --brand-dark: #00509B;
             --brand-green: #78C878;
@@ -50,7 +50,7 @@
         .splash-btn:active { transform: scale(0.95); }
         .loading-text { font-size: 0.9em; margin-top: 10px; color: #82AFE1; }
 
-        /* 彈窗樣式 */
+        /* 彈窗樣式 (名字/金句) */
         .msg-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.6); z-index: 9500;
@@ -75,7 +75,7 @@
             border: none; border-radius: 10px; font-size: 1em; font-weight: bold; cursor: pointer;
         }
 
-        /* 死亡畫面 */
+        /* 死亡畫面 (z-index: 9000) */
         #death-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.9); z-index: 9000;
@@ -207,7 +207,18 @@
         .pet-option:hover { border-color: var(--brand-dark); background: #f9f9f9; }
         .pet-option img { width: 50px; height: 50px; margin-right: 15px; background: var(--screen-bg); padding: 5px; border-radius: 5px;}
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100;}
+        /* V9.2 重大修正：將 modal 層級提升至 10001，確保蓋過死亡畫面 (z-index: 9000) */
+        .modal { 
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.5); 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 10001; /* 修正點：原本是 100，現在改為 10001 */
+        }
+        
         .modal-content { background: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 350px; position: relative; max-height: 80vh; overflow-y: auto; }
         
         .option { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; background: white; border-radius: 8px; cursor: pointer; text-align: left; font-size: 1em;}
@@ -337,7 +348,7 @@
 <script>
     const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS1nHrAGkjigCD5ynjx0gnKYe1Ftx_l44Wdnnzpxo0-YQTl__g0tamkKW9Sn-BL1JUyy4Qh3xpCGr6L/pub?output=csv";
     
-    // 🔥 V9.1: 40句毒舌 + 吹牛金句 (已修正)
+    // 每日隨機金句 (40句)
     const motivationalQuotes = [
         "上帝是公平的，你長這樣，書一定讀得會！",
         "你有宇宙最強的自然老師教你，怎麼可能不會？",
@@ -518,25 +529,24 @@
         { name: "慶功宴", icon: "🍱", price: 300, exp: 250, hunger: 100 }
     ];
 
-    // V9.1 State 升級：增加 seenQuestions, reviewQueue, totalAnswered
     let state = { 
         coins: 0, exp: 0, hunger: 80, pet: 'steady', level: 0, login: '', 
         lastSaveTime: Date.now(), isDead: false, reviveChances: 3, startDate: Date.now(),
         playerName: "", 
-        seenQuestions: [], // 已回答過的題目索引
-        reviewQueue: [], // 錯題複習隊列 {index, targetTurn}
-        totalAnswered: 0, // 總答題數
-        correctStreak: 0 // 連續答對 (for revive)
+        seenQuestions: [], 
+        reviewQueue: [], 
+        totalAnswered: 0, 
+        correctStreak: 0 
     };
     
     let daysLeft = 0;
     let isReviveMode = false;
-    let sessionCorrectCount = 0; // 本次session答對計數 (for 金句獎勵)
+    let sessionCorrectCount = 0; 
 
     async function init() {
         await fetchQuestions(); 
 
-        let save = localStorage.getItem('pet_v91'); // V9.1 Key
+        let save = localStorage.getItem('pet_v92'); // Update key for version change
         if(save) {
             let loaded = JSON.parse(save);
             state = { ...state, ...loaded };
@@ -595,7 +605,7 @@
 
     function resetGame() {
         if(confirm("😭 很遺憾，復活失敗...\n寵物已經離開了。\n\n確定要重新開始新的旅程嗎？")) {
-            localStorage.removeItem('pet_v91');
+            localStorage.removeItem('pet_v92');
             location.reload();
         }
     }
@@ -672,14 +682,12 @@
         loadQuestion(); 
     }
     
-    // --- V9.1 核心選題邏輯 (含不重複 + 保底 + 錯題) ---
     let currentQIndex = -1; 
 
     function loadQuestion() {
         let qIndex = -1;
         state.totalAnswered++; 
 
-        // 1. 復仇模式 (錯題優先)
         let reviewItemIndex = state.reviewQueue.findIndex(item => item.target <= state.totalAnswered);
         
         if (reviewItemIndex !== -1) {
@@ -687,13 +695,11 @@
             state.reviewQueue.splice(reviewItemIndex, 1);
             console.log("【復仇模式】重考錯題 ID:", qIndex);
         } 
-        // 2. 保底模式 (每10題考核心)
         else if (state.totalAnswered % 10 === 0 && questions.length > 11) {
             const limit = Math.min(11, questions.length);
             qIndex = Math.floor(Math.random() * limit);
             console.log("【保底機制】考核心題 ID:", qIndex);
         }
-        // 3. 不重複隨機
         else {
             let availableIndices = [];
             for(let i=0; i<questions.length; i++) {
@@ -701,15 +707,12 @@
             }
 
             if (availableIndices.length === 0) {
-                // 重置題庫
                 state.seenQuestions = [];
                 availableIndices = Array.from(Array(questions.length).keys());
             }
 
             let rand = Math.floor(Math.random() * availableIndices.length);
             qIndex = availableIndices[rand];
-            
-            // 隨機抽的才加入已讀
             state.seenQuestions.push(qIndex);
         }
 
@@ -728,7 +731,6 @@
         opts.forEach(b=>b.disabled=true);
         
         if(i===ans) {
-            // 答對
             btn.classList.add('correct');
             playSound('correct'); 
             
@@ -745,14 +747,12 @@
                 if(state.hunger<0) state.hunger=0;
                 triggerCoinEffect();
                 
-                // V8.1: 每答對10題跳出特殊鼓勵
                 totalCorrectCount++;
                 if (totalCorrectCount > 0 && totalCorrectCount % 10 === 0) {
                     showSpecialQuote();
                 }
             }
         } else {
-            // 答錯
             btn.classList.add('wrong'); opts[ans].classList.add('correct');
             playSound('wrong'); 
             
@@ -763,7 +763,6 @@
                 isReviveMode = false;
             } else {
                 triggerWrongEffect();
-                // 錯題加入復仇筆記本
                 if (currentQIndex !== -1) {
                     if (!state.reviewQueue.some(item => item.index === currentQIndex)) {
                         state.reviewQueue.push({
@@ -836,7 +835,7 @@
     }
 
     function closeModal(id) { document.getElementById(id).style.display='none'; }
-    function save() { state.lastSaveTime = Date.now(); localStorage.setItem('pet_v91', JSON.stringify(state)); }
+    function save() { state.lastSaveTime = Date.now(); localStorage.setItem('pet_v92', JSON.stringify(state)); }
     
     init(); 
 
